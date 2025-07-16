@@ -46,7 +46,7 @@ jobs:
   deploy:
     name: Desplegar en GitHub Pages
     needs: validate
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.validate.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -67,7 +67,7 @@ jobs:
       - name: Subir artefacto para Pages
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './'
           
       - name: Desplegar en GitHub Pages
         id: deployment
