@@ -29,7 +29,7 @@ jobs:
   automerge:
         name: Fusionar PR
         needs: validate
-        if: github.event_name == 'push' && needs.validate.result == 'success'
+        if: github.event_name == 'pull_request' && needs.validate.result == 'success' && github.event.pull_request.draft == true
         #no se ejecutará si el PR es un draft
         runs-on: ubuntu-latest
         permissions:
