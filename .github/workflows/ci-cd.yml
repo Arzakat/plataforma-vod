@@ -1,0 +1,74 @@
+name: Pipeline CI/CD para VOD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate:
+    name: Validar código
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Instalar dependencias
+        run: npm install
+          
+      - name: Ejecutar pruebas (simuladas)
+        run: echo "No haré pruebas reales, sólo levantar CI/CD"
+
+  automerge:
+        name: Fusionar PR
+        needs: validate
+        if: github.event_name == 'pull_request' && needs.validate.result == 'success' && github.event.pull_request.draft == false
+        runs-on: ubuntu-latest
+        permissions:
+            pull-requests: write
+            contents: write
+        
+        steps:
+            - name: Fusionar
+              uses: pascalgn/automerge-action@v0.16.3
+              env:
+                GITHUB_TOKEN: "${{ secrets.ACTIONS_PAT }}"
+                MERGE_METHOD: "squash"
+                MERGE_LABELS: ""
+
+  deploy:
+    name: Desplegar en GitHub Pages
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        
+      - name: Configurar Pages
+        id: pages
+        uses: actions/configure-pages@v3
+        
+      - name: Subir artefacto
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './'
+          
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
